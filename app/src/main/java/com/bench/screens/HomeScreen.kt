@@ -21,7 +21,7 @@ import com.bench.ui.TitleBlock
 private val calculate = listOf(
     TileSpec("fillet", "FILLET", 2, 2, Glyph.FILLET, true),
     TileSpec("slope", "SLOPE", 1, 1, Glyph.SLOPE, true),
-    TileSpec("bolt", "BOLT", 1, 1, Glyph.BOLT, false),
+    TileSpec("bolt", "BOLT", 1, 1, Glyph.BOLT, true),
     TileSpec("feeds", "FEEDS · SPEEDS", 2, 1, Glyph.FEEDS, false)
 )
 private val convert = listOf(
