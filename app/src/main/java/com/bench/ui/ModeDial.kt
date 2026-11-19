@@ -95,13 +95,14 @@ fun ModeDial(
     max: Double,
     onValue: (Double) -> Unit,
     coarseMul: Double,
+    allowFine: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
     val curValue by rememberUpdatedState(value)
     val curOnValue by rememberUpdatedState(onValue)
-    var coarse by remember { mutableStateOf(false) }
-    val effStep = if (coarse) step * coarseMul else step
+    var speed by remember { mutableStateOf(0) }
+    val effStep = when (speed) { 1 -> step * coarseMul; 2 -> step / 5.0; else -> step }
     var accum by remember { mutableFloatStateOf(0f) }
     var lastAng by remember { mutableFloatStateOf(Float.NaN) }
     val tickDeg = 7f
@@ -127,7 +128,7 @@ fun ModeDial(
                         var d = a - last
                         while (d > 180f) d -= 360f
                         while (d < -180f) d += 360f
-                        accum += d
+                        accum += d * (1f + minOf(abs(d) / 3f, 4f))
                         var cur = curValue
                         while (abs(accum) >= tickDeg) {
                             val dir = if (accum > 0f) 1 else -1
@@ -206,11 +207,11 @@ fun ModeDial(
             modifier = Modifier.offset(x = cx - 40.dp, y = cy - 40.dp).size(80.dp),
             color = BenchColors.surface,
             shape = CircleShape,
-            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); coarse = !coarse }
+            onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); speed = (speed + 1) % (if (allowFine) 3 else 2) }
         ) {
             Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                 BText("STEP", BenchType.label, align = TextAlign.Center)
-                BText(if (coarse) "×" + coarseMul.toInt() else "×1", BenchType.value, align = TextAlign.Center)
+                BText(when (speed) { 1 -> "×" + coarseMul.toInt(); 2 -> "×0.2"; else -> "×1" }, BenchType.value, align = TextAlign.Center)
             }
         }
     }

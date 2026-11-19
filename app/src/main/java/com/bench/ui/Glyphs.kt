@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlin.math.cos
 import kotlin.math.sin
 
-enum class Glyph { FILLET, SLOPE, BOLT, FEEDS, LENGTH, MASS, TEMP, LEVEL, FIELD, SOUND, LIGHT, POWER, BATTERY, WIFI, CORES }
+enum class Glyph { FILLET, SLOPE, BOLT, FEEDS, LENGTH, MASS, TEMP, LEVEL, FIELD, SOUND, LIGHT, POWER, BATTERY, WIFI, CORES, SHAKE, AIRTIME, HEIGHT, PRESSURE, FRACTION }
 
 /** Micrographics, drawn in a square anchored bottom-left of the available area. */
 fun DrawScope.drawGlyph(g: Glyph, tint: Color) {
@@ -121,6 +121,39 @@ fun DrawScope.drawGlyph(g: Glyph, tint: Color) {
                 drawArc(tint, 225f, 90f, false, p(0.5f - r, 0.85f - r), Size(2 * r * s, 2 * r * s), style = Stroke(w, cap = StrokeCap.Round))
             }
             drawCircle(acc, w * 1.6f, p(0.5f, 0.85f))
+        }
+        Glyph.SHAKE -> {
+            val path = Path().apply {
+                moveTo(p(0.05f, 0.5f).x, p(0.05f, 0.5f).y)
+                val ys = listOf(0.2f, 0.8f, 0.3f, 0.7f, 0.4f, 0.55f, 0.5f)
+                ys.forEachIndexed { i, y -> lineTo(p(0.05f + (i + 1) * 0.13f, y).x, p(0.05f + (i + 1) * 0.13f, y).y) }
+            }
+            drawPath(path, acc, style = Stroke(w * 1.2f, cap = StrokeCap.Round))
+        }
+        Glyph.AIRTIME -> {
+            val path = Path().apply {
+                moveTo(p(0.05f, 0.9f).x, p(0.05f, 0.9f).y)
+                quadraticBezierTo(p(0.5f, -0.3f).x, p(0.5f, -0.3f).y, p(0.95f, 0.9f).x, p(0.95f, 0.9f).y)
+            }
+            drawPath(path, tint, style = Stroke(w, pathEffect = dash))
+            drawCircle(acc, w * 2f, p(0.5f, 0.3f))
+            drawLine(tint, p(0.05f, 0.92f), p(0.95f, 0.92f), w)
+        }
+        Glyph.HEIGHT -> {
+            drawLine(tint, p(0.3f, 0.95f), p(0.3f, 0.1f), w)
+            drawLine(acc, p(0.3f, 0.1f), p(0.85f, 0.55f), w * 1.4f, StrokeCap.Round)
+            drawCircle(tint, w * 1.6f, p(0.85f, 0.55f))
+            drawLine(tint, p(0.05f, 0.95f), p(0.95f, 0.95f), w)
+        }
+        Glyph.PRESSURE -> {
+            drawArc(tint, 150f, 240f, false, p(0.08f, 0.08f), Size(0.84f * s, 0.84f * s), style = Stroke(w, cap = StrokeCap.Round))
+            drawLine(acc, p(0.5f, 0.5f), p(0.72f, 0.3f), w * 1.4f, StrokeCap.Round)
+            drawCircle(acc, w * 1.4f, p(0.5f, 0.5f))
+        }
+        Glyph.FRACTION -> {
+            drawCircle(tint, w * 1.8f, p(0.5f, 0.2f))
+            drawCircle(tint, w * 1.8f, p(0.5f, 0.8f))
+            drawLine(acc, p(0.2f, 0.5f), p(0.8f, 0.5f), w * 1.4f, StrokeCap.Round)
         }
         Glyph.CORES -> {
             val a = 0.4f
