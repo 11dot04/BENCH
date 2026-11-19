@@ -40,7 +40,10 @@ import com.bench.ui.Readout
 import com.bench.ui.ReadoutRow
 import com.bench.ui.TitleBlock
 import com.bench.ui.ToolPager
+import com.bench.ui.axisTicks
 import com.bench.ui.brushedMetal
+import com.bench.ui.gridStepMm
+import com.bench.ui.niceFit
 import com.bench.ui.targetMarker
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -67,14 +70,14 @@ fun BoltScreen(unit: LenUnit, onUnit: (LenUnit) -> Unit, onBack: () -> Unit) {
             Box(
                 Modifier.weight(1f).fillMaxWidth().heightIn(min = 150.dp)
                     .clip(RoundedCornerShape(20.dp)).brushedMetal()
-            ) { BoltDiagram(res, pcdMm, Modifier.fillMaxSize()) }
+            ) { BoltDiagram(res, pcdMm, unit, Modifier.fillMaxSize()) }
             when (param) {
                 0 -> ModeDial(
                     modes, 0, { param = it },
                     unit.toDisplay(pcdMm), unit.dialStep, unit.toDisplay(5.0), unit.toDisplay(500.0),
                     { pcdMm = unit.fromDisplay(it) }, 10.0
                 )
-                1 -> ModeDial(modes, 1, { param = it }, holes, 1.0, 2.0, 24.0, { holes = it }, 3.0)
+                1 -> ModeDial(modes, 1, { param = it }, holes, 1.0, 2.0, 24.0, { holes = it }, 3.0, false)
                 else -> ModeDial(modes, 2, { param = it }, start, 0.5, 0.0, 359.5, { start = it }, 10.0)
             }
         },
@@ -82,7 +85,7 @@ fun BoltScreen(unit: LenUnit, onUnit: (LenUnit) -> Unit, onBack: () -> Unit) {
             TitleBlock("HOLE\nPOSITIONS")
             Spacer(Modifier.height(14.dp))
             BoltDiagram(
-                res, pcdMm,
+                res, pcdMm, unit,
                 Modifier.fillMaxWidth().height(300.dp).drawBehind {
                     drawRect(Brush.verticalGradient(listOf(BenchColors.accent.copy(alpha = 0.10f), Color.Transparent)))
                 }
@@ -102,12 +105,12 @@ fun BoltScreen(unit: LenUnit, onUnit: (LenUnit) -> Unit, onBack: () -> Unit) {
 }
 
 @Composable
-private fun BoltDiagram(res: BoltResult, pcd: Double, modifier: Modifier) {
+private fun BoltDiagram(res: BoltResult, pcd: Double, unit: LenUnit, modifier: Modifier) {
     val tm = rememberTextMeasurer()
     Canvas(modifier) {
         val pad = 44.dp.toPx()
         val avail = min(size.width, size.height) - 2 * pad
-        val sc = (avail / pcd).toFloat()
+        val sc = niceFit(pcd, pcd, avail, avail, unit.perMm)
         val c = Offset(size.width / 2f, size.height / 2f)
         val rPx = (pcd / 2.0 * sc).toFloat()
         fun pt(p: Pt) = Offset(c.x + (p.x * sc).toFloat(), c.y - (p.y * sc).toFloat())
@@ -117,6 +120,10 @@ private fun BoltDiagram(res: BoltResult, pcd: Double, modifier: Modifier) {
         drawLine(BenchColors.dim.copy(alpha = 0.5f), Offset(0f, c.y), Offset(size.width, c.y), 1.5f, pathEffect = dotted)
         drawLine(BenchColors.dim.copy(alpha = 0.5f), Offset(c.x, 0f), Offset(c.x, size.height), 1.5f, pathEffect = dotted)
         drawCircle(BenchColors.dim, rPx, c, style = Stroke(1.5f, pathEffect = dashed))
+        val stepMm = gridStepMm(avail, sc, unit.perMm)
+        axisTicks(c, (stepMm * sc).toFloat())
+        val gridText = tm.measure("GRID " + unit.show(stepMm) + " " + unit.label, BenchType.label)
+        drawText(gridText, topLeft = Offset(14.dp.toPx(), size.height - gridText.size.height - 12.dp.toPx()))
 
         val count = res.holes.size
         for (i in 0 until count) {

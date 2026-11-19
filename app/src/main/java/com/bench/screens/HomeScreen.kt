@@ -22,7 +22,9 @@ private val calculate = listOf(
     TileSpec("fillet", "FILLET", 2, 2, Glyph.FILLET, true),
     TileSpec("slope", "SLOPE", 1, 1, Glyph.SLOPE, true),
     TileSpec("bolt", "BOLT", 1, 1, Glyph.BOLT, true),
-    TileSpec("feeds", "FEEDS · SPEEDS", 2, 1, Glyph.FEEDS, false)
+    TileSpec("feeds", "FEEDS · SPEEDS", 2, 1, Glyph.FEEDS, true),
+    TileSpec("fraction", "FRACTION", 2, 1, Glyph.FRACTION, true),
+    TileSpec("height", "HEIGHT", 2, 1, Glyph.HEIGHT, true)
 )
 private val convert = listOf(
     TileSpec("length", "LENGTH", 2, 1, Glyph.LENGTH, false),
@@ -31,15 +33,19 @@ private val convert = listOf(
 )
 private val sense = listOf(
     TileSpec("level", "LEVEL", 2, 2, Glyph.LEVEL, false),
-    TileSpec("field", "FIELD", 1, 1, Glyph.FIELD, false),
-    TileSpec("sound", "SOUND", 1, 1, Glyph.SOUND, false),
-    TileSpec("light", "LIGHT", 2, 1, Glyph.LIGHT, false)
+    TileSpec("field", "FIELD", 1, 1, Glyph.FIELD, true),
+    TileSpec("sound", "SOUND", 1, 1, Glyph.SOUND, true),
+    TileSpec("light", "LIGHT", 2, 1, Glyph.LIGHT, true),
+    TileSpec("shake", "SHAKE · RPM", 2, 1, Glyph.SHAKE, true),
+    TileSpec("airtime", "AIR", 1, 1, Glyph.AIRTIME, true),
+    TileSpec("pressure", "PRESS", 1, 1, Glyph.PRESSURE, true),
+    TileSpec("power", "POWER", 1, 1, Glyph.POWER, true)
 )
 private val shizuku = listOf(
-    TileSpec("power", "POWER", 1, 1, Glyph.POWER, false, true),
     TileSpec("battery", "BATTERY", 1, 1, Glyph.BATTERY, false, true),
     TileSpec("wifi", "WI-FI", 1, 1, Glyph.WIFI, false, true),
-    TileSpec("cores", "CORES", 1, 1, Glyph.CORES, false, true)
+    TileSpec("cores", "CORES", 1, 1, Glyph.CORES, false, true),
+    TileSpec("thermal", "THERMAL", 1, 1, Glyph.TEMP, false, true)
 )
 
 @Composable

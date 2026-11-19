@@ -42,7 +42,10 @@ import com.bench.ui.Readout
 import com.bench.ui.ReadoutRow
 import com.bench.ui.TitleBlock
 import com.bench.ui.ToolPager
+import com.bench.ui.axisTicks
 import com.bench.ui.brushedMetal
+import com.bench.ui.gridStepMm
+import com.bench.ui.niceFit
 import com.bench.ui.targetMarker
 import kotlin.math.atan2
 import kotlin.math.max
@@ -123,7 +126,7 @@ private fun FilletDiagram(r: FilletResult, radius: Double, unit: LenUnit, compac
         val spanY = max(maxY - minY, 1e-6)
         val availW = size.width - 2 * pad
         val availH = size.height - 2 * pad
-        val sc = min(availW / spanX, availH / spanY).toFloat()
+        val sc = niceFit(spanX, spanY, availW, availH, unit.perMm)
         val offX = pad + (availW - (spanX * sc).toFloat()) / 2f
         val offY = pad + (availH - (spanY * sc).toFloat()) / 2f
         fun sx(x: Double) = offX + ((x - minX) * sc).toFloat()
@@ -143,6 +146,10 @@ private fun FilletDiagram(r: FilletResult, radius: Double, unit: LenUnit, compac
 
         drawLine(BenchColors.dim.copy(alpha = 0.5f), Offset(0f, o.y), Offset(size.width, o.y), 1.5f, pathEffect = dotted)
         drawLine(BenchColors.dim.copy(alpha = 0.5f), Offset(o.x, 0f), Offset(o.x, size.height), 1.5f, pathEffect = dotted)
+        val stepMm = gridStepMm(max(availW, availH), sc, unit.perMm)
+        axisTicks(o, (stepMm * sc).toFloat())
+        val gridText = tm.measure("GRID " + unit.show(stepMm) + " " + unit.label, BenchType.label)
+        drawText(gridText, topLeft = Offset(14.dp.toPx(), size.height - gridText.size.height - 12.dp.toPx()))
         drawLine(BenchColors.dim, o, Offset(sx(e1.x), sy(e1.y)), 2f)
         drawLine(BenchColors.dim, o, Offset(sx(e2.x), sy(e2.y)), 2f)
         drawCircle(BenchColors.dim, rPx, c, style = Stroke(1.5f, pathEffect = dashed))
