@@ -16,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.bench.engine.LenUnit
+import com.bench.screens.BoltScreen
 import com.bench.screens.FilletScreen
 import com.bench.screens.HomeScreen
 import com.bench.screens.SlopeScreen
@@ -32,6 +33,7 @@ fun BenchApp() {
             when (s) {
                 "fillet" -> FilletScreen(unit, setUnit) { screen = "home" }
                 "slope" -> SlopeScreen(unit, setUnit) { screen = "home" }
+                "bolt" -> BoltScreen(unit, setUnit) { screen = "home" }
                 else -> HomeScreen(unit, setUnit) { screen = it }
             }
         }

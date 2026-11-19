@@ -86,7 +86,7 @@ fun TileSection(specs: List<TileSpec>, onOpen: (String) -> Unit) {
 @Composable
 private fun Tile(spec: TileSpec, modifier: Modifier, onOpen: (String) -> Unit) {
     val haptic = LocalHapticFeedback.current
-    val ink = if (spec.ready) BenchColors.ink else BenchColors.dim
+    val ink = if (spec.ready) BenchColors.ink else BenchColors.dim.copy(alpha = 0.55f)
     PressBox(
         modifier = modifier,
         color = if (spec.shizuku) BenchColors.ground2 else BenchColors.surface,

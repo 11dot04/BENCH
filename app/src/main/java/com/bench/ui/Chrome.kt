@@ -169,3 +169,22 @@ fun ParamTile(label: String, value: String, selected: Boolean, modifier: Modifie
         }
     }
 }
+
+/** Two- or three-way switch: one pill, the chosen segment lit. */
+@Composable
+fun Segmented(options: List<String>, selected: Int, modifier: Modifier = Modifier, onSelect: (Int) -> Unit) {
+    val haptic = LocalHapticFeedback.current
+    Row(modifier.clip(CircleShape).background(BenchColors.surface).padding(3.dp)) {
+        options.forEachIndexed { i, o ->
+            Box(
+                Modifier.weight(1f).clip(CircleShape)
+                    .background(if (i == selected) BenchColors.accent else Color.Transparent)
+                    .tap { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onSelect(i) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                BText(o, BenchType.label, color = if (i == selected) BenchColors.ground else BenchColors.dim, align = TextAlign.Center)
+            }
+        }
+    }
+}
