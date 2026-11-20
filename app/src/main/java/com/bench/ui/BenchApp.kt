@@ -28,6 +28,11 @@ import com.bench.screens.PressureScreen
 import com.bench.screens.ShakeScreen
 import com.bench.screens.SoundScreen
 import com.bench.screens.FilletScreen
+import com.bench.screens.GForceScreen
+import com.bench.screens.LevelScreen
+import com.bench.screens.SpinScreen
+import com.bench.screens.SwingScreen
+import com.bench.screens.WifiScreen
 import com.bench.screens.HomeScreen
 import com.bench.screens.SlopeScreen
 
@@ -54,6 +59,11 @@ fun BenchApp() {
                 "airtime" -> AirtimeScreen(unit, setUnit) { screen = "home" }
                 "pressure" -> PressureScreen(unit, setUnit) { screen = "home" }
                 "power" -> PowerScreen(unit, setUnit) { screen = "home" }
+                "level" -> LevelScreen(unit, setUnit) { screen = "home" }
+                "spin" -> SpinScreen(unit, setUnit) { screen = "home" }
+                "swing" -> SwingScreen(unit, setUnit) { screen = "home" }
+                "gforce" -> GForceScreen(unit, setUnit) { screen = "home" }
+                "wifi" -> WifiScreen(unit, setUnit) { screen = "home" }
                 else -> HomeScreen(unit, setUnit) { screen = it }
             }
         }

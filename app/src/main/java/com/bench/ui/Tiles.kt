@@ -30,7 +30,9 @@ data class TileSpec(
     val h: Int,
     val glyph: Glyph,
     val ready: Boolean,
-    val shizuku: Boolean = false
+    val shizuku: Boolean = false,
+    val sensor: Int? = null,
+    val missing: Boolean = false
 )
 
 data class Placed(val spec: TileSpec, val col: Int, val row: Int)
@@ -108,7 +110,7 @@ private fun Tile(spec: TileSpec, modifier: Modifier, onOpen: (String) -> Unit) {
         }
         BText(spec.title, BenchType.label, Modifier.padding(10.dp), color = if (spec.ready) BenchColors.ink else BenchColors.dim)
         if (!spec.ready && spec.w >= 2) {
-            BText("SOON", BenchType.label, Modifier.align(Alignment.TopEnd).padding(10.dp))
+            BText(if (spec.missing) "NO SENSOR" else "SOON", BenchType.label, Modifier.align(Alignment.TopEnd).padding(10.dp))
         }
     }
 }

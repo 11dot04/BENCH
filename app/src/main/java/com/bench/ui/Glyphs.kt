@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlin.math.cos
 import kotlin.math.sin
 
-enum class Glyph { FILLET, SLOPE, BOLT, FEEDS, LENGTH, MASS, TEMP, LEVEL, FIELD, SOUND, LIGHT, POWER, BATTERY, WIFI, CORES, SHAKE, AIRTIME, HEIGHT, PRESSURE, FRACTION }
+enum class Glyph { FILLET, SLOPE, BOLT, FEEDS, LENGTH, MASS, TEMP, LEVEL, FIELD, SOUND, LIGHT, POWER, BATTERY, WIFI, CORES, SHAKE, AIRTIME, HEIGHT, PRESSURE, FRACTION, SPIN, SWING, GFORCE }
 
 /** Micrographics, drawn in a square anchored bottom-left of the available area. */
 fun DrawScope.drawGlyph(g: Glyph, tint: Color) {
@@ -154,6 +154,22 @@ fun DrawScope.drawGlyph(g: Glyph, tint: Color) {
             drawCircle(tint, w * 1.8f, p(0.5f, 0.2f))
             drawCircle(tint, w * 1.8f, p(0.5f, 0.8f))
             drawLine(acc, p(0.2f, 0.5f), p(0.8f, 0.5f), w * 1.4f, StrokeCap.Round)
+        }
+        Glyph.SPIN -> {
+            drawArc(tint, 40f, 270f, false, p(0.12f, 0.12f), Size(0.76f * s, 0.76f * s), style = Stroke(w, cap = StrokeCap.Round))
+            drawCircle(acc, w * 2f, p(0.744f, 0.209f))
+        }
+        Glyph.SWING -> {
+            drawLine(tint, p(0.5f, 0.05f), p(0.25f, 0.7f), w)
+            drawCircle(acc, 0.12f * s, p(0.25f, 0.7f))
+            drawArc(tint.copy(alpha = 0.6f), 68f, 44f, false, p(-0.16f, -0.61f), Size(1.32f * s, 1.32f * s), style = Stroke(w * 0.8f, pathEffect = dash))
+        }
+        Glyph.GFORCE -> {
+            drawCircle(tint, 0.42f * s, p(0.5f, 0.5f), style = Stroke(w))
+            drawCircle(tint.copy(alpha = 0.5f), 0.21f * s, p(0.5f, 0.5f), style = Stroke(w * 0.6f))
+            drawLine(tint.copy(alpha = 0.5f), p(0.08f, 0.5f), p(0.92f, 0.5f), w * 0.6f)
+            drawLine(tint.copy(alpha = 0.5f), p(0.5f, 0.08f), p(0.5f, 0.92f), w * 0.6f)
+            drawCircle(acc, w * 2.2f, p(0.64f, 0.36f))
         }
         Glyph.CORES -> {
             val a = 0.4f
