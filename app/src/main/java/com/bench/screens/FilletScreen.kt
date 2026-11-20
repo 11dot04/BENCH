@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
@@ -238,9 +239,11 @@ private fun DrawScope.drawText1(tm: TextMeasurer, text: String, at: Offset, colo
 private fun ParamsBackdrop(res: FilletResult, radius: Double, unit: LenUnit, modifier: Modifier) {
     val tm = rememberTextMeasurer()
     val shader = remember { RuntimeShader(BRUSHED_SRC) }
+    val density = LocalDensity.current
+    val top = with(density) { WindowInsets.systemBars.getTop(this).toFloat() }
+    val bottom = with(density) { WindowInsets.systemBars.getBottom(this).toFloat() }
+
     Canvas(modifier) {
-        val top = WindowInsets.systemBars.getTop(this)
-        val bottom = WindowInsets.systemBars.getBottom(this)
         val stage = Rect(
             28.dp.toPx(), top + 156.dp.toPx(),
             size.width - 28.dp.toPx(), size.height - bottom - 360.dp.toPx()
@@ -306,8 +309,11 @@ private fun ParamsBackdrop(res: FilletResult, radius: Double, unit: LenUnit, mod
 @Composable
 private fun DroBackdrop(res: FilletResult, radius: Double, unit: LenUnit, offX: Double, offY: Double, modifier: Modifier) {
     val tm = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val topInset = with(density) { WindowInsets.systemBars.getTop(this).toFloat() }
+
     Canvas(modifier) {
-        val top = WindowInsets.systemBars.getTop(this) + 72.dp.toPx()
+        val top = topInset + 72.dp.toPx()
         val stage = Rect(28.dp.toPx(), top, size.width - 28.dp.toPx(), top + (DRO_STAGE_DP - 36).dp.toPx())
         val v = buildView(res, radius, unit, stage, 22.dp.toPx())
         val (s1, sweep12) = arcAngles(v)
