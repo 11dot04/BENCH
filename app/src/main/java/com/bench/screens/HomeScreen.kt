@@ -56,9 +56,9 @@ private val sense = listOf(
     TileSpec("swing", "SWING", 1, 1, Glyph.SWING, true, sensor = GYR)
 )
 private val shizuku = listOf(
-    TileSpec("battery", "BATTERY", 1, 1, Glyph.BATTERY, false, true),
-    TileSpec("cores", "CORES", 1, 1, Glyph.CORES, false, true),
-    TileSpec("thermal", "THERMAL", 1, 1, Glyph.TEMP, false, true)
+    TileSpec("battery", "BATTERY", 1, 1, Glyph.BATTERY, true, true),
+    TileSpec("cores", "CORES", 1, 1, Glyph.CORES, true, true),
+    TileSpec("thermal", "THERMAL", 1, 1, Glyph.TEMP, true, true)
 )
 
 /** Greys out tools whose sensor this phone lacks. Only asks the system what exists; reads nothing. */
