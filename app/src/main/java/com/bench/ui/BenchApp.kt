@@ -33,6 +33,9 @@ import com.bench.screens.LevelScreen
 import com.bench.screens.SpinScreen
 import com.bench.screens.SwingScreen
 import com.bench.screens.WifiScreen
+import com.bench.screens.BatteryScreen
+import com.bench.screens.CoresScreen
+import com.bench.screens.ThermalScreen
 import com.bench.screens.HomeScreen
 import com.bench.screens.SlopeScreen
 
@@ -43,7 +46,11 @@ fun BenchApp() {
     val unit = if (inch) LenUnit.IN else LenUnit.MM
     val setUnit: (LenUnit) -> Unit = { inch = (it == LenUnit.IN) }
     BackHandler(enabled = screen != "home") { screen = "home" }
-    Box(Modifier.fillMaxSize().background(BenchColors.ground).windowInsetsPadding(WindowInsets.systemBars)) {
+    val bleed = screen == "fillet"
+    Box(
+        Modifier.fillMaxSize().background(BenchColors.ground)
+            .then(if (bleed) Modifier else Modifier.windowInsetsPadding(WindowInsets.systemBars))
+    ) {
         Crossfade(targetState = screen, animationSpec = tween(220), label = "screen") { s ->
             when (s) {
                 "fillet" -> FilletScreen(unit, setUnit) { screen = "home" }
@@ -64,6 +71,9 @@ fun BenchApp() {
                 "swing" -> SwingScreen(unit, setUnit) { screen = "home" }
                 "gforce" -> GForceScreen(unit, setUnit) { screen = "home" }
                 "wifi" -> WifiScreen(unit, setUnit) { screen = "home" }
+                "battery" -> BatteryScreen(unit, setUnit) { screen = "home" }
+                "cores" -> CoresScreen(unit, setUnit) { screen = "home" }
+                "thermal" -> ThermalScreen(unit, setUnit) { screen = "home" }
                 else -> HomeScreen(unit, setUnit) { screen = it }
             }
         }

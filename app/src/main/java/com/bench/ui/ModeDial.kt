@@ -1,7 +1,11 @@
 package com.bench.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -47,7 +51,7 @@ data class DialMode(val glyph: ModeGlyph, val label: String, val value: String)
 private fun DrawScope.drawModeGlyph(g: ModeGlyph, tint: Color) {
     val s = size.minDimension
     val c = Offset(s / 2f, s / 2f)
-    val w = s * 0.08f
+    val w = s * 0.06f
     when (g) {
         ModeGlyph.GAUGE -> {
             drawCircle(tint, s * 0.44f, c, style = Stroke(w))
@@ -56,11 +60,14 @@ private fun DrawScope.drawModeGlyph(g: ModeGlyph, tint: Color) {
         }
         ModeGlyph.SPOKES -> {
             drawCircle(tint, s * 0.44f, c, style = Stroke(w))
+            drawCircle(tint, s * 0.12f, c, style = Stroke(w))
             for (i in 0 until 3) {
                 val a = Math.toRadians(i * 120.0 - 90.0)
-                drawLine(tint, c, Offset(c.x + s * 0.3f * cos(a).toFloat(), c.y + s * 0.3f * sin(a).toFloat()), w, StrokeCap.Round)
+                val ca = cos(a).toFloat()
+                val sa = sin(a).toFloat()
+                drawLine(tint, Offset(c.x + s * 0.12f * ca, c.y + s * 0.12f * sa), Offset(c.x + s * 0.34f * ca, c.y + s * 0.34f * sa), w, StrokeCap.Round)
+                drawCircle(tint, w * 1.5f, Offset(c.x + s * 0.44f * ca, c.y + s * 0.44f * sa))
             }
-            drawCircle(tint, w, c)
         }
         ModeGlyph.ANGLE -> {
             drawLine(tint, Offset(s * 0.12f, s * 0.84f), Offset(s * 0.9f, s * 0.84f), w, StrokeCap.Round)
@@ -158,20 +165,20 @@ fun ModeDial(
                 val idx = base + j
                 val major = Math.floorMod(idx, 10L) == 0L
                 val mid = Math.floorMod(idx, 5L) == 0L
-                val len = if (major) 16.dp.toPx() else if (mid) 11.dp.toPx() else 7.dp.toPx()
+                val len = if (major) 12.dp.toPx() else if (mid) 8.dp.toPx() else 5.dp.toPx()
                 val rad = Math.toRadians(a.toDouble())
                 val dx = cos(rad).toFloat()
                 val dy = sin(rad).toFloat()
                 val fade = (1f - abs(off) / 80f).coerceIn(0f, 1f)
                 drawLine(
-                    BenchColors.dim.copy(alpha = fade),
+                    BenchColors.dim.copy(alpha = fade * 0.6f),
                     Offset(c.x + dx * (r - len), c.y + dy * (r - len)),
                     Offset(c.x + dx * r, c.y + dy * r),
                     strokeWidth = if (major) 2.5f else 1.5f
                 )
             }
             drawLine(
-                BenchColors.accent, Offset(c.x, c.y + r - 24.dp.toPx()), Offset(c.x, c.y + r + 8.dp.toPx()),
+                BenchColors.accent, Offset(c.x, c.y + r - 16.dp.toPx()), Offset(c.x, c.y + r + 6.dp.toPx()),
                 strokeWidth = 3.5f, cap = StrokeCap.Round
             )
         }
@@ -181,38 +188,72 @@ fun ModeDial(
             val sel = i == selected
             val dx = slots[i].first
             val dy = slots[i].second
-            Column(
-                Modifier.offset(x = cx + dx - 40.dp, y = cy + dy - 24.dp - 6.dp - 34.dp).width(80.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                BText(m.label, BenchType.label, color = if (sel) BenchColors.accent else BenchColors.dim, align = TextAlign.Center)
-                BText(m.value, BenchType.value, color = if (sel) BenchColors.accent else BenchColors.ink, align = TextAlign.Center)
+            val textColor = if (sel) BenchColors.accent else BenchColors.dim
+            // Readout: the top one sits on one line above its icon; the side ones stack, outboard, like the concept.
+            when (i) {
+                0 -> Box(Modifier.fillMaxWidth().offset(y = cy + dy - 28.dp - 30.dp), contentAlignment = Alignment.TopCenter) {
+                    BText(m.label + " " + m.value, BenchType.dial, color = textColor)
+                }
+                1 -> Box(Modifier.fillMaxWidth().offset(y = cy - 78.dp), contentAlignment = Alignment.TopStart) {
+                    Column {
+                        BText(m.label + ".", BenchType.dial, color = textColor)
+                        BText(m.value, BenchType.dial, color = textColor)
+                    }
+                }
+                else -> Box(Modifier.fillMaxWidth().offset(y = cy - 78.dp), contentAlignment = Alignment.TopEnd) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        BText(m.label + ".", BenchType.dial, color = textColor, align = TextAlign.End)
+                        BText(m.value, BenchType.dial, color = textColor, align = TextAlign.End)
+                    }
+                }
             }
+            // Bare line icon; the chosen one gets a small orange arc beneath it.
             PressBox(
-                modifier = Modifier
-                    .offset(x = cx + dx - 24.dp, y = cy + dy - 24.dp)
-                    .size(48.dp)
-                    .then(if (sel) Modifier.border(2.dp, BenchColors.accent, CircleShape) else Modifier),
-                color = if (sel) BenchColors.surfaceHigh else BenchColors.surface,
-                shape = CircleShape,
+                modifier = Modifier.offset(x = cx + dx - 28.dp, y = cy + dy - 28.dp).size(width = 56.dp, height = 64.dp),
+                color = Color.Transparent,
+                shape = RoundedCornerShape(16.dp),
                 onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); onSelect(i) }
             ) {
-                Canvas(Modifier.align(Alignment.Center).size(22.dp)) {
-                    drawModeGlyph(m.glyph, if (sel) BenchColors.accent else BenchColors.ink)
+                Canvas(Modifier.fillMaxSize()) {
+                    val gs = 40.dp.toPx()
+                    val side = (size.width - gs) / 2f
+                    inset(side, 4.dp.toPx(), side, size.height - 4.dp.toPx() - gs) {
+                        drawModeGlyph(m.glyph, BenchColors.ink)
+                    }
+                    if (sel) {
+                        drawArc(
+                            BenchColors.accent, 20f, 140f, false,
+                            Offset(size.width / 2f - 10.dp.toPx(), size.height - 24.dp.toPx()), Size(20.dp.toPx(), 12.dp.toPx()),
+                            style = Stroke(2.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                    }
                 }
             }
         }
 
+        // Soft centre button: step size. Dark dome, drop shadow, grey bowl.
         PressBox(
-            modifier = Modifier.offset(x = cx - 40.dp, y = cy - 40.dp).size(80.dp),
-            color = BenchColors.surface,
+            modifier = Modifier.offset(x = cx - 40.dp, y = cy - 40.dp).size(80.dp)
+                .shadow(14.dp, CircleShape, clip = false, ambientColor = Color.Black, spotColor = Color.Black),
+            color = Color(0xFF1B1E23),
             shape = CircleShape,
             onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); speed = (speed + 1) % (if (allowFine) 3 else 2) }
         ) {
-            Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                BText("STEP", BenchType.label, align = TextAlign.Center)
-                BText(when (speed) { 1 -> "×" + coarseMul.toInt(); 2 -> "×0.2"; else -> "×1" }, BenchType.value, align = TextAlign.Center)
+            Canvas(Modifier.fillMaxSize()) {
+                drawCircle(
+                    Brush.radialGradient(listOf(Color(0xFF282C33), Color(0xFF181A1F)), Offset(size.width * 0.4f, size.height * 0.35f), size.width * 0.75f),
+                    size.width / 2f, Offset(size.width / 2f, size.height / 2f)
+                )
+                drawArc(
+                    Color(0xFF4A4F58), 20f, 140f, false,
+                    Offset(size.width * 0.27f, size.height * 0.2f), Size(size.width * 0.46f, size.height * 0.46f),
+                    style = Stroke(7.dp.toPx(), cap = StrokeCap.Round)
+                )
             }
+            BText(
+                when (speed) { 1 -> "×" + coarseMul.toInt(); 2 -> "×0.2"; else -> "×1" },
+                BenchType.label, Modifier.align(Alignment.BottomCenter).padding(bottom = 11.dp), align = TextAlign.Center
+            )
         }
     }
 }

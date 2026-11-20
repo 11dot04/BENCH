@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +38,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlin.math.cos
+import kotlin.math.sin
 import com.bench.engine.LenUnit
 
 @Composable
@@ -70,34 +73,47 @@ fun PressBox(
     )
 }
 
+/** Chunky six-lobed cog, as in the concept. */
+@Composable
+fun Cog(modifier: Modifier = Modifier) {
+    Canvas(modifier) {
+        val c = Offset(size.width / 2f, size.height / 2f)
+        val s = size.minDimension
+        drawCircle(BenchColors.ink, s * 0.30f, c)
+        for (i in 0 until 6) {
+            val a = Math.toRadians(i * 60.0 - 90.0)
+            drawCircle(BenchColors.ink, s * 0.15f, Offset(c.x + s * 0.32f * cos(a).toFloat(), c.y + s * 0.32f * sin(a).toFloat()))
+        }
+        drawCircle(BenchColors.ground, s * 0.14f, c)
+    }
+}
+
 @Composable
 fun BenchHeader(crumb: String, unit: LenUnit, onUnit: (LenUnit) -> Unit, onCrumb: (() -> Unit)? = null) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Canvas(Modifier.size(26.dp)) {
-            val r = size.minDimension * 0.34f
-            drawCircle(
-                BenchColors.ink, r,
-                style = Stroke(width = size.minDimension * 0.15f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(r * 0.55f, r * 0.4f)))
-            )
-            drawCircle(BenchColors.ground, size.minDimension * 0.11f)
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+        Cog(Modifier.size(34.dp))
+        Row(Modifier.weight(1f).padding(start = 14.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            val mod = if (onCrumb != null) Modifier.tap(onCrumb) else Modifier
+            Row(mod.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Canvas(Modifier.size(width = 36.dp, height = 16.dp)) {
+                    val y = size.height / 2f
+                    val tipX = size.width - 8.dp.toPx()
+                    drawLine(BenchColors.dim, Offset(0f, y), Offset(tipX, y), 1.5f)
+                    drawLine(BenchColors.dim, Offset(tipX, y), Offset(size.width, y - 7.dp.toPx()), 1.5f)
+                    drawLine(BenchColors.dim, Offset(tipX, y), Offset(size.width, y + 7.dp.toPx()), 1.5f)
+                }
+                Spacer(Modifier.width(6.dp))
+                BText(crumb, BenchType.readout, color = BenchColors.dim)
+            }
         }
-        val crumbMod = if (onCrumb != null) Modifier.tap(onCrumb) else Modifier
-        Box(Modifier.weight(1f).padding(start = 14.dp)) {
-            BText(
-                (if (onCrumb != null) "— ‹ " else "— ") + crumb,
-                BenchType.readout,
-                crumbMod.padding(vertical = 12.dp),
-                color = BenchColors.dim
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            LenUnit.entries.forEach { u ->
-                Column(Modifier.tap { onUnit(u) }.padding(vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    BText(u.label, BenchType.readout, color = if (u == unit) BenchColors.ink else BenchColors.dim)
-                    Box(
-                        Modifier.padding(top = 3.dp).width(16.dp).height(2.dp)
-                            .background(if (u == unit) BenchColors.accent else Color.Transparent)
-                    )
+        // Stacked unit switch; the lit one carries an orange bar that runs out to the screen edge.
+        Column(Modifier.offset(x = 20.dp), horizontalAlignment = Alignment.End) {
+            listOf(LenUnit.IN, LenUnit.MM).forEach { u ->
+                val on = u == unit
+                Row(Modifier.tap { onUnit(u) }.padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                    BText(u.label, BenchType.readout, color = if (on) BenchColors.ink else BenchColors.dim)
+                    Spacer(Modifier.width(10.dp))
+                    Box(Modifier.width(30.dp).height(3.dp).background(if (on) BenchColors.accent else Color.Transparent))
                 }
             }
         }
@@ -117,10 +133,9 @@ fun Hatch(modifier: Modifier = Modifier) {
 
 @Composable
 fun TitleBlock(title: String, sub: String? = null) {
-    Row(verticalAlignment = Alignment.Bottom) {
-        Hatch(Modifier.size(28.dp, 48.dp))
-        Spacer(Modifier.width(12.dp))
-        Column {
+    Box {
+        Hatch(Modifier.size(width = 40.dp, height = 56.dp).align(Alignment.BottomStart))
+        Column(Modifier.padding(start = 30.dp)) {
             if (sub != null) BText(sub, BenchType.label)
             BText(title, BenchType.title)
         }

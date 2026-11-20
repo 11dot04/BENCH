@@ -28,7 +28,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import com.bench.engine.LenUnit
+import com.bench.engine.ShizukuShell
 
 /** Plain scrolling page used by the simpler tools: header, title, then the tool's content. */
 @Composable
@@ -114,4 +118,22 @@ fun LineChart(values: List<Float>, modifier: Modifier = Modifier, lo: Float? = n
 @Composable
 fun Gap(h: Int = 12) {
     Spacer(Modifier.height(h.dp))
+}
+
+/** Shows [content] only when Shizuku is running and allowed; otherwise explains what to do. */
+@Composable
+fun ColumnScope.ShizukuGate(content: @Composable ColumnScope.() -> Unit) {
+    val st by ShizukuShell.state.collectAsState()
+    LaunchedEffect(Unit) { ShizukuShell.update() }
+    when (st) {
+        ShizukuShell.State.READY -> content()
+        ShizukuShell.State.NO_PERMISSION -> {
+            Note("SHIZUKU IS RUNNING. ALLOW BENCH TO USE IT TO SEE THESE READINGS.")
+            ActionButton("ALLOW SHIZUKU", Modifier.fillMaxWidth(), primary = true) { ShizukuShell.requestPermission() }
+        }
+        ShizukuShell.State.MISSING -> {
+            Note("THIS TOOL READS SYSTEM DATA THROUGH SHIZUKU, WHICH IS NOT RUNNING. START SHIZUKU, THEN PRESS CHECK AGAIN.")
+            ActionButton("CHECK AGAIN", Modifier.fillMaxWidth(), primary = true) { ShizukuShell.update() }
+        }
+    }
 }
