@@ -34,7 +34,10 @@ private val calculate = listOf(
     TileSpec("bolt", "BOLT", 1, 1, Glyph.BOLT, true),
     TileSpec("feeds", "FEEDS · SPEEDS", 2, 1, Glyph.FEEDS, true),
     TileSpec("fraction", "FRACTION", 2, 1, Glyph.FRACTION, true),
-    TileSpec("height", "HEIGHT", 2, 1, Glyph.HEIGHT, true, sensor = ACC)
+    TileSpec("height", "HEIGHT", 2, 1, Glyph.HEIGHT, true, sensor = ACC),
+    TileSpec("lens", "LENS · DOF", 2, 1, Glyph.LENS, true),
+    TileSpec("circuit", "CIRCUIT", 2, 1, Glyph.CIRCUIT, true),
+    TileSpec("type", "TYPE SCALE", 2, 1, Glyph.TYPE, true)
 )
 private val convert = listOf(
     TileSpec("length", "LENGTH", 2, 1, Glyph.LENGTH, false),
