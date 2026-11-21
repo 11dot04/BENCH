@@ -55,7 +55,7 @@ fun TypeScreen(unit: LenUnit, onUnit: (LenUnit) -> Unit, onBack: () -> Unit) {
             Gap(10)
             Column(
                 Modifier.weight(1f).fillMaxWidth().heightIn(min = 140.dp)
-                    .clip(RoundedCornerShape(20.dp)).background(BenchColors.surface)
+                    
                     .verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 for (k in 4 downTo -1) {

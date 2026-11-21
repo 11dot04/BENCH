@@ -104,7 +104,7 @@ fun LensScreen(unit: LenUnit, onUnit: (LenUnit) -> Unit, onBack: () -> Unit) {
 @Composable
 private fun LensDiagram(r: OpticsResult, subjectM: Double, unit: LenUnit, modifier: Modifier) {
     val tm = rememberTextMeasurer()
-    Canvas(modifier.clip(RoundedCornerShape(20.dp)).background(BenchColors.surface)) {
+    Canvas(modifier) {
         val pad = 24.dp.toPx()
         val camX = pad + 10.dp.toPx()
         val midY = size.height / 2f

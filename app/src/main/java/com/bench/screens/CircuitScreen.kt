@@ -90,7 +90,7 @@ private fun DividerTool() {
 @Composable
 private fun DividerSketch(r1: Double, r2: Double, vin: Double, vout: Double, modifier: Modifier) {
     val tm = rememberTextMeasurer()
-    Canvas(modifier.clip(RoundedCornerShape(20.dp)).background(BenchColors.surface)) {
+    Canvas(modifier) {
         val x = size.width * 0.38f
         val top = 26.dp.toPx()
         val bot = size.height - 26.dp.toPx()
@@ -167,7 +167,7 @@ private fun FilterTool() {
 @Composable
 private fun BodePlot(fc: Double, highPass: Boolean, modifier: Modifier) {
     val tm = rememberTextMeasurer()
-    Canvas(modifier.clip(RoundedCornerShape(20.dp)).background(BenchColors.surface)) {
+    Canvas(modifier) {
         val padL = 38.dp.toPx()
         val padR = 14.dp.toPx()
         val padT = 14.dp.toPx()
@@ -256,7 +256,7 @@ private fun ResistorDrawing(ohms: Double, modifier: Modifier) {
         code == -1 -> Color(ColorCode.GOLD)
         else -> Color(ColorCode.SILVER)
     }
-    Canvas(modifier.clip(RoundedCornerShape(20.dp)).background(BenchColors.surface)) {
+    Canvas(modifier) {
         val midY = size.height / 2f
         val bodyW = size.width * 0.5f
         val bodyH = 46.dp.toPx()

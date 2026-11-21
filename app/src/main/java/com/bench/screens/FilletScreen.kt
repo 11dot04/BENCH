@@ -56,11 +56,12 @@ import com.bench.ui.Readout
 import com.bench.ui.ReadoutRow
 import com.bench.ui.TitleBlock
 import com.bench.ui.ToolPager
-import com.bench.ui.axisTicks
+import com.bench.ui.SyncKnob
+import com.bench.ui.fadingTicks
+import com.bench.ui.gridCaption
+import com.bench.ui.rememberZoomMm
 import com.bench.ui.brushedBrush
 import com.bench.ui.BRUSHED_SRC
-import com.bench.ui.gridStepMm
-import com.bench.ui.niceFit
 import com.bench.ui.targetMarker
 import kotlinx.coroutines.delay
 import kotlin.math.atan2
@@ -74,13 +75,14 @@ private const val DRO_STAGE_DP = 300
 fun FilletScreen(unit: LenUnit, onUnit: (LenUnit) -> Unit, onBack: () -> Unit) {
     var radiusMm by rememberSaveable { mutableStateOf(12.5) }
     var ori by rememberSaveable { mutableStateOf(45.0) }
-    var ang by rememberSaveable { mutableStateOf(50.0) }
+    var ang by rememberSaveable { mutableStateOf(90.0) }
     var param by rememberSaveable { mutableStateOf(0) }
     var offX by rememberSaveable { mutableStateOf(0.0) }
     var offY by rememberSaveable { mutableStateOf(0.0) }
     var flash by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
     val res = remember(radiusMm, ori, ang) { FilletMath.solve(radiusMm, ori, ang) }
+    val window = rememberZoomMm(figSpan(res, radiusMm), unit.perMm)
     val modes = listOf(
         DialMode(ModeGlyph.GAUGE, "R", unit.show(radiusMm)),
         DialMode(ModeGlyph.SPOKES, "ORI", plainDeg(ori)),
@@ -97,8 +99,8 @@ fun FilletScreen(unit: LenUnit, onUnit: (LenUnit) -> Unit, onBack: () -> Unit) {
     ToolPager(
         unit, onUnit, onBack,
         fullBleed = true,
-        paramsBackdrop = { ParamsBackdrop(res, radiusMm, unit, Modifier.fillMaxSize()) },
-        calcsBackdrop = { DroBackdrop(res, radiusMm, unit, offX, offY, Modifier.fillMaxSize()) },
+        paramsBackdrop = { ParamsBackdrop(res, radiusMm, unit, window, Modifier.fillMaxSize()) },
+        calcsBackdrop = { DroBackdrop(res, radiusMm, unit, window, offX, offY, Modifier.fillMaxSize()) },
         params = {
             TitleBlock("FILLET\nCALCULATOR")
             Spacer(Modifier.weight(1f))
@@ -154,32 +156,11 @@ fun FilletScreen(unit: LenUnit, onUnit: (LenUnit) -> Unit, onBack: () -> Unit) {
 
 private fun plainDeg(d: Double): String = com.bench.engine.degText(d)
 
-/** The knob beside the DRO title. For now it copies the coordinates to the clipboard. */
-@Composable
-private fun SyncKnob(flash: Boolean, onClick: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        BText(if (flash) "COPIED" else "SYNC", BenchType.value, color = BenchColors.accent)
-        Spacer(Modifier.width(14.dp))
-        PressBox(
-            modifier = Modifier.size(64.dp).shadow(12.dp, CircleShape, clip = false, ambientColor = Color.Black, spotColor = Color.Black),
-            color = Color(0xFF1B1E23), shape = CircleShape, onClick = onClick
-        ) {
-            Canvas(Modifier.fillMaxSize()) {
-                drawArc(
-                    BenchColors.accent, -50f, 100f, false,
-                    Offset(size.width * 0.28f, size.height * 0.2f), Size(size.width * 0.56f, size.height * 0.6f),
-                    style = Stroke(6.dp.toPx(), cap = StrokeCap.Round)
-                )
-            }
-        }
-    }
-}
-
 // ---------------------------------------------------------------- geometry shared by both backdrops
 
 private class FView(
     val o: Offset, val c: Offset, val a: Offset, val b: Offset, val rPx: Float,
-    val dir1: Offset, val dir2: Offset, val sc: Float, val stepMm: Double
+    val dir1: Offset, val dir2: Offset, val sc: Float
 )
 
 private fun unitVec(v: Offset): Offset {
@@ -194,29 +175,36 @@ private fun normDeg(d: Float): Float {
     return x
 }
 
-private fun buildView(r: FilletResult, radius: Double, unit: LenUnit, stage: Rect, pad: Float): FView {
+private fun figBounds(r: FilletResult, radius: Double): DoubleArray {
     val e1 = Pt(r.p1.x * 1.35, r.p1.y * 1.35)
     val e2 = Pt(r.p2.x * 1.35, r.p2.y * 1.35)
-    val minX = minOf(0.0, e1.x, e2.x, r.center.x - radius)
-    val maxX = maxOf(0.0, e1.x, e2.x, r.center.x + radius)
-    val minY = minOf(0.0, e1.y, e2.y, r.center.y - radius)
-    val maxY = maxOf(0.0, e1.y, e2.y, r.center.y + radius)
-    val spanX = max(maxX - minX, 1e-6)
-    val spanY = max(maxY - minY, 1e-6)
-    val availW = stage.width - 2 * pad
-    val availH = stage.height - 2 * pad
-    val sc = niceFit(spanX, spanY, availW, availH, unit.perMm)
-    val left = stage.left + pad + (availW - (spanX * sc).toFloat()) / 2f
-    val bottom = stage.bottom - pad - (availH - (spanY * sc).toFloat()) / 2f
-    fun sx(x: Double) = left + ((x - minX) * sc).toFloat()
-    fun sy(y: Double) = bottom - ((y - minY) * sc).toFloat()
+    return doubleArrayOf(
+        minOf(0.0, e1.x, e2.x, r.center.x - radius), maxOf(0.0, e1.x, e2.x, r.center.x + radius),
+        minOf(0.0, e1.y, e2.y, r.center.y - radius), maxOf(0.0, e1.y, e2.y, r.center.y + radius)
+    )
+}
+
+/** The size (mm) the zoom has to cover. */
+private fun figSpan(r: FilletResult, radius: Double): Double {
+    val b = figBounds(r, radius)
+    return max(b[1] - b[0], b[3] - b[2])
+}
+
+/** Places the figure in the stage at a fixed mm-per-pixel set by [windowMm]; only the centring follows the figure. */
+private fun buildView(r: FilletResult, radius: Double, stage: Rect, padTop: Float, padBottom: Float, padSide: Float, windowMm: Float): FView {
+    val bb = figBounds(r, radius)
+    val inner = Rect(stage.left + padSide, stage.top + padTop, stage.right - padSide, stage.bottom - padBottom)
+    val sc = min(inner.width, inner.height) / windowMm
+    val cx = (bb[0] + bb[1]) / 2.0
+    val cy = (bb[2] + bb[3]) / 2.0
+    fun sx(x: Double) = inner.center.x + ((x - cx) * sc).toFloat()
+    fun sy(y: Double) = inner.center.y - ((y - cy) * sc).toFloat()
     val o = Offset(sx(0.0), sy(0.0))
     val a = Offset(sx(r.p1.x), sy(r.p1.y))
     val b = Offset(sx(r.p2.x), sy(r.p2.y))
     return FView(
         o, Offset(sx(r.center.x), sy(r.center.y)), a, b, (radius * sc).toFloat(),
-        unitVec(Offset(a.x - o.x, a.y - o.y)), unitVec(Offset(b.x - o.x, b.y - o.y)), sc,
-        gridStepMm(max(availW, availH), sc, unit.perMm)
+        unitVec(Offset(a.x - o.x, a.y - o.y)), unitVec(Offset(b.x - o.x, b.y - o.y)), sc
     )
 }
 
@@ -236,7 +224,7 @@ private fun DrawScope.drawText1(tm: TextMeasurer, text: String, at: Offset, colo
 // ---------------------------------------------------------------- Parameters page: the part itself
 
 @Composable
-private fun ParamsBackdrop(res: FilletResult, radius: Double, unit: LenUnit, modifier: Modifier) {
+private fun ParamsBackdrop(res: FilletResult, radius: Double, unit: LenUnit, windowMm: Float, modifier: Modifier) {
     val tm = rememberTextMeasurer()
     val shader = remember { RuntimeShader(BRUSHED_SRC) }
     val density = LocalDensity.current
@@ -248,7 +236,7 @@ private fun ParamsBackdrop(res: FilletResult, radius: Double, unit: LenUnit, mod
             28.dp.toPx(), top + 156.dp.toPx(),
             size.width - 28.dp.toPx(), size.height - bottom - 360.dp.toPx()
         )
-        val v = buildView(res, radius, unit, stage, 20.dp.toPx())
+        val v = buildView(res, radius, stage, 20.dp.toPx(), 20.dp.toPx(), 20.dp.toPx(), windowMm)
         val (s1, sweep12) = arcAngles(v)
         val s2 = s1 + sweep12
         val arcTL = Offset(v.c.x - v.rPx, v.c.y - v.rPx)
@@ -276,9 +264,11 @@ private fun ParamsBackdrop(res: FilletResult, radius: Double, unit: LenUnit, mod
         drawPath(slab, Color.White.copy(alpha = 0.22f), style = Stroke(1.5f))
 
         // Axes and a halo around the fillet.
+        val axisEnd = v.o.y + 56.dp.toPx()
         drawLine(BenchColors.dim.copy(alpha = 0.55f), Offset(0f, v.o.y), Offset(size.width, v.o.y), 1.5f, pathEffect = dotted)
-        drawLine(BenchColors.dim.copy(alpha = 0.55f), Offset(v.o.x, 0f), Offset(v.o.x, size.height), 1.5f, pathEffect = dotted)
-        axisTicks(v.o, (v.stepMm * v.sc).toFloat())
+        drawLine(BenchColors.dim.copy(alpha = 0.55f), Offset(v.o.x, 0f), Offset(v.o.x, axisEnd), 1.5f, pathEffect = dotted)
+        val finest = fadingTicks(v.o, v.sc, unit.perMm, Rect(0f, 0f, size.width, axisEnd))
+        drawText1(tm, gridCaption(finest, unit.label), Offset(stage.left, stage.bottom + 6.dp.toPx()), BenchColors.dim)
         drawArc(Color.White.copy(alpha = 0.05f), s1, sweep12, false, arcTL, arcSz, style = Stroke(58.dp.toPx(), cap = StrokeCap.Round))
         drawArc(Color.White.copy(alpha = 0.10f), s1, sweep12, false, arcTL, arcSz, style = Stroke(40.dp.toPx(), cap = StrokeCap.Round))
 
@@ -307,15 +297,15 @@ private fun ParamsBackdrop(res: FilletResult, radius: Double, unit: LenUnit, mod
 // ---------------------------------------------------------------- Calculations page: the blueprint
 
 @Composable
-private fun DroBackdrop(res: FilletResult, radius: Double, unit: LenUnit, offX: Double, offY: Double, modifier: Modifier) {
+private fun DroBackdrop(res: FilletResult, radius: Double, unit: LenUnit, windowMm: Float, offX: Double, offY: Double, modifier: Modifier) {
     val tm = rememberTextMeasurer()
     val density = LocalDensity.current
     val topInset = with(density) { WindowInsets.systemBars.getTop(this).toFloat() }
 
     Canvas(modifier) {
         val top = topInset + 72.dp.toPx()
-        val stage = Rect(28.dp.toPx(), top, size.width - 28.dp.toPx(), top + (DRO_STAGE_DP - 36).dp.toPx())
-        val v = buildView(res, radius, unit, stage, 22.dp.toPx())
+        val stage = Rect(28.dp.toPx(), top, size.width - 28.dp.toPx(), top + (DRO_STAGE_DP - 30).dp.toPx())
+        val v = buildView(res, radius, stage, 14.dp.toPx(), 62.dp.toPx(), 22.dp.toPx(), windowMm)
         val (s1, sweep12) = arcAngles(v)
         val arcTL = Offset(v.c.x - v.rPx, v.c.y - v.rPx)
         val arcSz = Size(2 * v.rPx, 2 * v.rPx)
@@ -329,9 +319,11 @@ private fun DroBackdrop(res: FilletResult, radius: Double, unit: LenUnit, offX: 
             )
         )
 
+        val axisEnd = v.o.y + 56.dp.toPx()
         drawLine(BenchColors.dim.copy(alpha = 0.5f), Offset(0f, v.o.y), Offset(size.width, v.o.y), 1.5f, pathEffect = dotted)
-        drawLine(BenchColors.dim.copy(alpha = 0.5f), Offset(v.o.x, 0f), Offset(v.o.x, stage.bottom + 40.dp.toPx()), 1.5f, pathEffect = dotted)
-        axisTicks(v.o, (v.stepMm * v.sc).toFloat())
+        drawLine(BenchColors.dim.copy(alpha = 0.5f), Offset(v.o.x, 0f), Offset(v.o.x, axisEnd), 1.5f, pathEffect = dotted)
+        val finest = fadingTicks(v.o, v.sc, unit.perMm, Rect(0f, 0f, size.width, axisEnd))
+        drawText1(tm, gridCaption(finest, unit.label), Offset(stage.left, stage.bottom - 12.dp.toPx()), BenchColors.dim)
 
         // Legs to the sharp corner stay thin; the real edges beyond the tangent points are thick.
         drawLine(BenchColors.dim.copy(alpha = 0.6f), v.o, v.a, 1.3f)
