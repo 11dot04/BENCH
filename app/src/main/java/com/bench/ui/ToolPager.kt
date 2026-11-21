@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.bench.engine.LenUnit
 import kotlinx.coroutines.launch
@@ -48,8 +49,13 @@ fun ToolPager(
     val scope = rememberCoroutineScope()
     VerticalPager(state = state, modifier = Modifier.fillMaxSize()) { page ->
         Box(Modifier.fillMaxSize()) {
+            val scroll = rememberScrollState()
             val back = if (page == 0) paramsBackdrop else calcsBackdrop
-            if (back != null) back()
+            if (back != null) {
+                // On the Calculations page the picture is part of the page: it scrolls away with the content.
+                if (page == 1) Box(Modifier.fillMaxSize().graphicsLayer { translationY = -scroll.value.toFloat() }) { back() }
+                else back()
+            }
             Column(
                 Modifier.fillMaxSize()
                     .then(if (fullBleed) Modifier.windowInsetsPadding(WindowInsets.systemBars) else Modifier)
@@ -60,7 +66,7 @@ fun ToolPager(
                 if (page == 0) {
                     Column(Modifier.weight(1f).fillMaxWidth(), content = params)
                 } else {
-                    Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()), content = calcs)
+                    Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll), content = calcs)
                 }
                 Column(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     BText(

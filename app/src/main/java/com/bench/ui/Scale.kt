@@ -1,10 +1,13 @@
 package com.bench.ui
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.dp
+import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.hypot
 import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
@@ -59,4 +62,52 @@ fun DrawScope.axisTicks(origin: Offset, stepPx: Float, tint: Color = BenchColors
         val y = origin.y + k * stepPx
         if (y >= 0f && y <= size.height) drawLine(tint.copy(alpha = 0.7f), Offset(origin.x - t, y), Offset(origin.x + t, y), 1.5f)
     }
+}
+
+fun unitVec(v: Offset): Offset {
+    val l = max(hypot(v.x, v.y), 1e-6f)
+    return Offset(v.x / l, v.y / l)
+}
+
+/**
+ * Grid ticks along both axes through [origin] at every power of ten of the display unit. Each level
+ * fades with its on-screen spacing, so zooming never makes the grid jump. Returns the finest level
+ * that is fully visible, in display units (for the "GRID" caption).
+ */
+fun DrawScope.fadingTicks(origin: Offset, pxPerMm: Float, perMm: Double, bounds: Rect, tint: Color = BenchColors.dim): Double {
+    var finest = 0.0
+    var fallback = 1.0
+    for (k in -3..4) {
+        val stepDisp = 10.0.pow(k)
+        val stepPx = (stepDisp / perMm * pxPerMm).toFloat()
+        val a = ((stepPx - 7f) / 16f).coerceIn(0f, 1f)
+        if (a <= 0.02f) continue
+        fallback = stepDisp
+        if (a >= 0.95f && finest == 0.0) finest = stepDisp
+        val half = (1.6f + (k + 3) * 0.6f).dp.toPx()
+        val c = tint.copy(alpha = 0.75f * a)
+        if (origin.y >= bounds.top && origin.y <= bounds.bottom) {
+            val i0 = ceil((bounds.left - origin.x) / stepPx).toInt()
+            val i1 = floor((bounds.right - origin.x) / stepPx).toInt()
+            for (i in i0..i1) {
+                val x = origin.x + i * stepPx
+                drawLine(c, Offset(x, origin.y - half), Offset(x, origin.y + half), 1.5f)
+            }
+        }
+        if (origin.x >= bounds.left && origin.x <= bounds.right) {
+            val j0 = ceil((bounds.top - origin.y) / stepPx).toInt()
+            val j1 = floor((bounds.bottom - origin.y) / stepPx).toInt()
+            for (j in j0..j1) {
+                val y = origin.y + j * stepPx
+                drawLine(c, Offset(origin.x - half, y), Offset(origin.x + half, y), 1.5f)
+            }
+        }
+    }
+    return if (finest > 0.0) finest else fallback
+}
+
+fun gridCaption(stepDisp: Double, unitLabel: String): String {
+    val t = if (stepDisp >= 1.0) java.lang.String.format(java.util.Locale.US, "%.0f", stepDisp)
+    else java.lang.String.format(java.util.Locale.US, "%.3f", stepDisp).trimEnd('0').trimEnd('.')
+    return "GRID $t $unitLabel"
 }

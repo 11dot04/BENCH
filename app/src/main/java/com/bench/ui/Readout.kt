@@ -38,7 +38,7 @@ fun Readout(
     columns: List<String> = emptyList(),
     modifier: Modifier = Modifier,
     cellW: Dp = 72.dp,
-    dividers: Boolean = true,
+    dividers: Boolean = false,
     fade: Boolean = false,
     rowPad: Dp = 11.dp
 ) {

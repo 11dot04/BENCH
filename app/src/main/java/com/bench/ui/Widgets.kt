@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -44,7 +50,11 @@ fun ToolScaffold(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize()
+            .drawBehind {
+                drawRect(Brush.verticalGradient(listOf(Color(0xFF2A1C19).copy(alpha = 0.6f), Color.Transparent), 0f, size.height * 0.45f))
+            }
+            .verticalScroll(rememberScrollState())
             .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 32.dp)
     ) {
         BenchHeader("Tools", unit, onUnit, onCrumb = onBack)
@@ -90,7 +100,7 @@ fun Note(text: String) {
 /** Simple trace or spectrum plot on a card; auto-ranges unless [lo]/[hi] are given. */
 @Composable
 fun LineChart(values: List<Float>, modifier: Modifier = Modifier, lo: Float? = null, hi: Float? = null) {
-    Canvas(modifier.clip(RoundedCornerShape(16.dp)).background(BenchColors.surface)) {
+    Canvas(modifier) {
         val pad = 14.dp.toPx()
         for (i in 1..3) {
             val y = size.height * i / 4f
@@ -134,6 +144,27 @@ fun ColumnScope.ShizukuGate(content: @Composable ColumnScope.() -> Unit) {
         ShizukuShell.State.MISSING -> {
             Note("THIS TOOL READS SYSTEM DATA THROUGH SHIZUKU, WHICH IS NOT RUNNING. START SHIZUKU, THEN PRESS CHECK AGAIN.")
             ActionButton("CHECK AGAIN", Modifier.fillMaxWidth(), primary = true) { ShizukuShell.update() }
+        }
+    }
+}
+
+/** The knob beside a DRO title. For now it copies the coordinates to the clipboard. */
+@Composable
+fun SyncKnob(flash: Boolean, onClick: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        BText(if (flash) "COPIED" else "SYNC", BenchType.value, color = BenchColors.accent)
+        Spacer(Modifier.width(14.dp))
+        PressBox(
+            modifier = Modifier.size(64.dp).shadow(12.dp, CircleShape, clip = false, ambientColor = Color.Black, spotColor = Color.Black),
+            color = Color(0xFF1B1E23), shape = CircleShape, onClick = onClick
+        ) {
+            Canvas(Modifier.fillMaxSize()) {
+                drawArc(
+                    BenchColors.accent, -50f, 100f, false,
+                    Offset(size.width * 0.28f, size.height * 0.2f), Size(size.width * 0.56f, size.height * 0.6f),
+                    style = Stroke(6.dp.toPx(), cap = StrokeCap.Round)
+                )
+            }
         }
     }
 }

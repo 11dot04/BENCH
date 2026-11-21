@@ -49,7 +49,7 @@ fun BenchApp() {
     val unit = if (inch) LenUnit.IN else LenUnit.MM
     val setUnit: (LenUnit) -> Unit = { inch = (it == LenUnit.IN) }
     BackHandler(enabled = screen != "home") { screen = "home" }
-    val bleed = screen == "fillet"
+    val bleed = screen == "fillet" || screen == "bolt"
     Box(
         Modifier.fillMaxSize().background(BenchColors.ground)
             .then(if (bleed) Modifier else Modifier.windowInsetsPadding(WindowInsets.systemBars))
