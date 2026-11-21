@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlin.math.cos
 import kotlin.math.sin
 
-enum class Glyph { FILLET, SLOPE, BOLT, FEEDS, LENGTH, MASS, TEMP, LEVEL, FIELD, SOUND, LIGHT, POWER, BATTERY, WIFI, CORES, SHAKE, AIRTIME, HEIGHT, PRESSURE, FRACTION, SPIN, SWING, GFORCE }
+enum class Glyph { FILLET, SLOPE, BOLT, FEEDS, LENGTH, MASS, TEMP, LEVEL, FIELD, SOUND, LIGHT, POWER, BATTERY, WIFI, CORES, SHAKE, AIRTIME, HEIGHT, PRESSURE, FRACTION, SPIN, SWING, GFORCE, LENS, CIRCUIT, TYPE }
 
 /** Micrographics, drawn in a square anchored bottom-left of the available area. */
 fun DrawScope.drawGlyph(g: Glyph, tint: Color) {
@@ -170,6 +170,33 @@ fun DrawScope.drawGlyph(g: Glyph, tint: Color) {
             drawLine(tint.copy(alpha = 0.5f), p(0.08f, 0.5f), p(0.92f, 0.5f), w * 0.6f)
             drawLine(tint.copy(alpha = 0.5f), p(0.5f, 0.08f), p(0.5f, 0.92f), w * 0.6f)
             drawCircle(acc, w * 2.2f, p(0.64f, 0.36f))
+        }
+        Glyph.LENS -> {
+            drawCircle(tint, 0.4f * s, p(0.5f, 0.5f), style = Stroke(w))
+            drawCircle(tint.copy(alpha = 0.6f), 0.24f * s, p(0.5f, 0.5f), style = Stroke(w * 0.7f))
+            drawCircle(acc, 0.09f * s, p(0.5f, 0.5f))
+            for (i in 0 until 6) {
+                val a = Math.toRadians(i * 60.0)
+                drawLine(tint.copy(alpha = 0.6f), p(0.5f + 0.1f * cos(a).toFloat(), 0.5f + 0.1f * sin(a).toFloat()), p(0.5f + 0.24f * cos(a).toFloat(), 0.5f + 0.24f * sin(a).toFloat()), w * 0.7f)
+            }
+        }
+        Glyph.CIRCUIT -> {
+            val path = Path().apply {
+                moveTo(p(0.02f, 0.5f).x, p(0.02f, 0.5f).y)
+                lineTo(p(0.22f, 0.5f).x, p(0.22f, 0.5f).y)
+                val ys = listOf(0.2f, 0.8f, 0.2f, 0.8f, 0.2f, 0.8f)
+                ys.forEachIndexed { i, y -> lineTo(p(0.28f + i * 0.08f, y).x, p(0.28f + i * 0.08f, y).y) }
+                lineTo(p(0.8f, 0.5f).x, p(0.8f, 0.5f).y)
+                lineTo(p(0.98f, 0.5f).x, p(0.98f, 0.5f).y)
+            }
+            drawPath(path, acc, style = Stroke(w * 1.2f, cap = StrokeCap.Round))
+        }
+        Glyph.TYPE -> {
+            drawLine(tint, p(0.1f, 0.9f), p(0.32f, 0.12f), w * 1.4f, StrokeCap.Round)
+            drawLine(tint, p(0.32f, 0.12f), p(0.54f, 0.9f), w * 1.4f, StrokeCap.Round)
+            drawLine(tint, p(0.18f, 0.62f), p(0.46f, 0.62f), w)
+            drawCircle(acc, 0.12f * s, p(0.75f, 0.72f), style = Stroke(w * 1.2f))
+            drawLine(acc, p(0.87f, 0.6f), p(0.87f, 0.9f), w * 1.2f)
         }
         Glyph.CORES -> {
             val a = 0.4f

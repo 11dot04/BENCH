@@ -36,6 +36,9 @@ import com.bench.screens.WifiScreen
 import com.bench.screens.BatteryScreen
 import com.bench.screens.CoresScreen
 import com.bench.screens.ThermalScreen
+import com.bench.screens.LensScreen
+import com.bench.screens.CircuitScreen
+import com.bench.screens.TypeScreen
 import com.bench.screens.HomeScreen
 import com.bench.screens.SlopeScreen
 
@@ -74,6 +77,9 @@ fun BenchApp() {
                 "battery" -> BatteryScreen(unit, setUnit) { screen = "home" }
                 "cores" -> CoresScreen(unit, setUnit) { screen = "home" }
                 "thermal" -> ThermalScreen(unit, setUnit) { screen = "home" }
+                "lens" -> LensScreen(unit, setUnit) { screen = "home" }
+                "circuit" -> CircuitScreen(unit, setUnit) { screen = "home" }
+                "type" -> TypeScreen(unit, setUnit) { screen = "home" }
                 else -> HomeScreen(unit, setUnit) { screen = it }
             }
         }
